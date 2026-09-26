@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Cadastro de Veículos</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        body {
+            background: #f0f4f8;
+            padding: 20px;
+            max-width: 1100px;
+            margin: 0 auto;
+            color: #2d3748;
+        }
+
+        h1 {
+            text-align: center;
+            margin: 20px 0 30px;
+            color: #1a365d;
+        }
+
+        .config,
+        form,
+        .lista-container {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            margin-bottom: 25px;
+        }
+
+        .config {
+            background: #fff8dc;
+            border-left: 5px solid #ecc94b;
+        }
+
+        .config h2 {
+            margin-bottom: 15px;
+        }
+
+        .config input,
+        form input,
+        form select {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            border: 1px solid #cbd5e0;
+            border-radius: 6px;
+            font-size: 15px;
+        }
+
+        .config input:focus,
+        form input:focus,
+        form select:focus {
+            outline: none;
+            border-color: #3182ce;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        button {
+            background: #2b6cb0;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background: #2c5282;
+        }
+
+        .btn-conectar {
+            background: #38a169;
+            width: 100%;
+        }
+
+        .btn-conectar:hover {
+            background: #2f855a;
+        }
+
+        .btn-cancelar {
+            background: #718096;
+            margin-left: 8px;
+        }
+
+        .btn-cancelar:hover {
+            background: #4a5568;
+        }
+
+        .btn-editar {
+            background: #d69e2e;
+            padding: 7px 12px;
+            font-size: 13px;
+            margin: 0;
+        }
+
+        .btn-editar:hover {
+            background: #b7791f;
+        }
+
+        .btn-excluir {
+            background: #e53e3e;
+            padding: 7px 12px;
+            font-size: 13px;
+            margin: 0;
+        }
+
+        .btn-excluir:hover {
+            background: #c53030;
+        }
+
+        .acoes {
+            display: flex;
+            gap: 7px;
+        }
+
+        .mensagem {
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .sucesso {
+            background: #f0fff4;
+            color: #22543d;
+            border: 1px solid #9ae6b4;
+        }
+
+        .erro {
+            background: #fff5f5;
+            color: #742a2a;
+            border: 1px solid #feb2b2;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 5px 9px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .ativo {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .inativo {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .tabela-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        th,
+        td {
+            padding: 13px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        th {
+            background: #2b6cb0;
+            color: white;
+        }
+
+        tr:hover {
+            background: #f7fafc;
+        }
+
+        .sem-registros {
+            text-align: center;
+            padding: 30px;
+            color: #718096;
+        }
+
+        .conexao {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        .conectado {
+            color: #2f855a;
+        }
+
+        .desconectado {
+            color: #c53030;
+        }
+
+        @media (max-width: 700px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .acoes {
+                flex-direction: column;
+            }
+
+            th,
+            td {
+                font-size: 13px;
+                padding: 9px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>🚗 Cadastro de Veículos</h1>
+
+    <!-- CONFIGURAÇÃO SUPABASE -->
+    <div class="config">
+
+        <h2>⚙️ Configuração do Supabase</h2>
+
+        <p>
+            Informe as credenciais públicas do seu projeto Supabase.
+        </p>
+
+        <input
+            type="url"
+            id="supabase_url"
+            placeholder="https://seu-projeto.supabase.co"
+        >
+
+        <input
+            type="text"
+            id="supabase_key"
+            placeholder="Cole aqui sua SUPABASE_ANON_KEY"
+        >
+
+        <button
+            type="button"
+            class="btn-conectar"
+            onclick="inicializarSupabase()"
+        >
+            🔌 Conectar ao Supabase
+        </button>
+
+        <div id="statusConexao" class="conexao desconectado">
+            ● Desconectado
+        </div>
+
+    </div>
+
+
+    <!-- FORMULÁRIO -->
+    <form id="formVeiculo">
+
+        <h2 id="tituloForm">
+            Cadastrar Novo Veículo
+        </h2>
+
+        <input
+            type="hidden"
+            id="veiculo_id"
+        >
+
+        <div class="grid">
+
+            <input
+                type="text"
+                id="marca"
+                placeholder="Marca * (ex: Toyota)"
+                required
+            >
+
+            <input
+                type="text"
+                id="modelo"
+                placeholder="Modelo * (ex: Corolla)"
+                required
+            >
+
+            <input
+                type="number"
+                id="ano"
+                placeholder="Ano *"
+                min="1886"
+                max="2100"
+                required
+            >
+
+            <input
+                type="text"
+                id="placa"
+                placeholder="Placa * (ex: ABC1D23)"
+                maxlength="10"
+                required
+            >
+
+            <input
+                type="text"
+                id="cor"
+                placeholder="Cor"
+            >
+
+            <select id="status">
+                <option value="ativo">Ativo</option>
+                <option value="inativo">Inativo</option>
+                <option value="vendido">Vendido</option>
+                <option value="baixado">Baixado</option>
+            </select>
+
+        </div>
+
+        <input
+            type="text"
+            id="proprietario"
+            placeholder="Nome do proprietário"
+        >
+
+        <input
+            type="text"
+            id="renavam"
+            placeholder="RENAVAM"
+        >
+
+        <input
+            type="text"
+            id="observacoes"
+            placeholder="Observações"
+        >
+
+        <button type="submit">
+            💾 Salvar Veículo
+        </button>
+
+        <button
+            type="button"
+            id="btnCancelar"
+            class="btn-cancelar"
+            onclick="cancelarEdicao()"
+            style="display:none;"
+        >
+            Cancelar
+        </button>
+
+        <div id="mensagem" class="mensagem"></div>
+
+    </form>
+
+
+    <!-- LISTA -->
+    <div class="lista-container">
+
+        <h2>📋 Veículos Cadastrados</h2>
+
+        <br>
+
+        <div class="tabela-wrapper">
+
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>Marca / Modelo</th>
+                        <th>Ano</th>
+                        <th>Placa</th>
+                        <th>Cor</th>
+                        <th>Proprietário</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+
+                <tbody id="listaVeiculos">
+
+                    <tr>
+                        <td
+                            colspan="7"
+                            class="sem-registros"
+                        >
+                            Conecte ao Supabase para carregar os veículos.
+                        </td>
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+
+    <!-- BIBLIOTECA SUPABASE -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- JAVASCRIPT DO SISTEMA -->
+    <script src="script.js"></script>
+
+</body>
+</html>
